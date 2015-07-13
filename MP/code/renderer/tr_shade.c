@@ -40,6 +40,7 @@ If you have questions concerning this license or the applicable additional terms
   This file deals with applying shaders to surface data in the tess struct.
 */
 
+#ifndef USE_OPENGLES
 /*
 ================
 R_ArrayElementDiscrete
@@ -47,7 +48,6 @@ R_ArrayElementDiscrete
 This is just for OpenGL conformance testing, it should never be the fastest
 ================
 */
-#ifndef USE_OPENGLES
 static void APIENTRY R_ArrayElementDiscrete( GLint index ) {
 	qglColor4ubv( tess.svars.colors[ index ] );
 	if ( glState.currenttmu ) {
@@ -58,7 +58,6 @@ static void APIENTRY R_ArrayElementDiscrete( GLint index ) {
 	}
 	qglVertex3fv( tess.xyz[ index ] );
 }
-#endif
 
 /*
 ===================
@@ -66,17 +65,6 @@ R_DrawStripElements
 
 ===================
 */
-#ifdef USE_OPENGLES
-#define MAX_INDEX 4096
-glIndex_t sindexes[MAX_INDEX];
-int num_sindexed;
-
-void AddIndexe(GLint idx) {
-	sindexes[num_sindexed++]=idx;
-}
-#endif
-
-#ifndef USE_OPENGLES
 static int c_vertexes;          // for seeing how long our average strips are
 static int c_begins;
 static void R_DrawStripElements( int numIndexes, const glIndex_t *indexes, void ( APIENTRY *element )( GLint ) ) {
@@ -182,11 +170,17 @@ without compiled vertex arrays.
 */
 static void R_DrawElements( int numIndexes, const glIndex_t *indexes ) {
 #ifdef USE_OPENGLES
-	qglDrawElements( GL_TRIANGLES, 
-						numIndexes,
-						GL_INDEX_TYPE,
-						indexes );
-		return;
+	if ( glState.glStateBits & GLS_POLYMODE_LINE ) {
+		qglDrawElements( GL_LINE_STRIP,
+						 numIndexes,
+						 GL_INDEX_TYPE,
+						 indexes );
+	} else {
+		qglDrawElements( GL_TRIANGLES,
+						 numIndexes,
+						 GL_INDEX_TYPE,
+						 indexes );
+	}
 #else
 	int primitives;
 
@@ -301,14 +295,7 @@ static void DrawTris( shaderCommands_t *input ) {
 		GLimp_LogComment( "glLockArraysEXT\n" );
 	}
 
-#ifdef USE_OPENGLES
-	qglDrawElements( GL_LINE_STRIP, 
-					input->numIndexes,
-					GL_INDEX_TYPE,
-					input->indexes );
-#else
 	R_DrawElements( input->numIndexes, input->indexes );
-#endif
 
 	if ( qglUnlockArraysEXT ) {
 		qglUnlockArraysEXT();
@@ -328,6 +315,10 @@ Draws vertex normals for debugging
 static void DrawNormals( shaderCommands_t *input ) {
 	int i;
 	vec3_t temp;
+#ifdef USE_OPENGLES
+	GLfloat vtx[SHADER_MAX_VERTEXES*2*3];
+	int idx = 0;
+#endif
 
 	GL_Bind( tr.whiteImage );
 	qglColor3f( 1,1,1 );
@@ -335,29 +326,22 @@ static void DrawNormals( shaderCommands_t *input ) {
 	GL_State( GLS_POLYMODE_LINE | GLS_DEPTHMASK_TRUE );
 
 #ifdef USE_OPENGLES
-	vec3_t vtx[2];
-	//*TODO* save states for texture & color array
-#else
-	qglBegin( GL_LINES );
-#endif
 	for ( i = 0 ; i < input->numVertexes ; i++ ) {
-#ifndef USE_OPENGLES
-		qglVertex3fv( input->xyz[i] );
-#endif
+		VectorCopy( input->xyz[i], (vtx+idx*3) );
+		idx++;
 		VectorMA( input->xyz[i], 2, input->normal[i], temp );
-#ifdef USE_OPENGLES
-		memcpy(vtx, input->xyz[i], sizeof(GLfloat)*3);
-		memcpy(vtx+1, temp, sizeof(GLfloat)*3);
-		qglVertexPointer (3, GL_FLOAT, 16, vtx);
-		qglDrawArrays(GL_LINES, 0, 2);
-#else
-		qglVertex3fv( temp );
-#endif
+		VectorCopy( temp, (vtx+idx*3) );
+		idx++;
 	}
 
-#ifdef USE_OPENGLES
-	//*TODO* restaure state for texture & color
+	R_DrawArrays( GL_LINES, idx, vtx, 3, NULL, NULL );
 #else
+	qglBegin( GL_LINES );
+	for ( i = 0 ; i < input->numVertexes ; i++ ) {
+		qglVertex3fv( input->xyz[i] );
+		VectorMA( input->xyz[i], 2, input->normal[i], temp );
+		qglVertex3fv( temp );
+	}
 	qglEnd();
 #endif
 

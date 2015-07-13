@@ -1351,6 +1351,11 @@ void    GL_Cull( int cullType );
 void    RE_StretchRaw( int x, int y, int w, int h, int cols, int rows, const byte *data, int client, qboolean dirty );
 void    RE_UploadCinematic( int w, int h, int cols, int rows, const byte *data, int client, qboolean dirty );
 
+#ifdef USE_OPENGLES
+void R_DrawArrays( GLenum mode, GLsizei count, GLfloat *vertexes, int vertCoords, GLfloat *tex, GLfloat *colors );
+#endif
+void ZTM_DrawQuad( float x, float y, float width, float height, float s0, float t0, float s1, float t1 );
+
 void        RE_BeginFrame( stereoFrame_t stereoFrame );
 void        RE_BeginRegistration( glconfig_t *glconfig );
 void        RE_LoadWorldMap( const char *mapname );

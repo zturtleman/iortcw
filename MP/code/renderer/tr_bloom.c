@@ -89,55 +89,11 @@ static struct {
 
 
 static void ID_INLINE R_Bloom_Quad( int width, int height, float texX, float texY, float texWidth, float texHeight ) {
-	int x = 0;
-	int y = 0;
-	x = 0;
-	y += glConfig.vidHeight - height;
-	width += x;
-	height += y;
-	
-	texWidth += texX;
-	texHeight += texY;
+	int y;
 
-#ifdef USE_OPENGLES
-	GLfloat tex[] = {
-	 texX, texHeight,
-	 texX, texY,
-	 texWidth, texY,
-	 texWidth, texHeight };
-	GLfloat vtx[] = {
-	 x, y,
-	 x, height,
-	 width, height,
-	 width, y };
-	GLboolean text = qglIsEnabled(GL_TEXTURE_COORD_ARRAY);
-	GLboolean glcol = qglIsEnabled(GL_COLOR_ARRAY);
-	if (glcol)
-		qglDisableClientState(GL_COLOR_ARRAY);
-	if (!text)
-		qglEnableClientState( GL_TEXTURE_COORD_ARRAY );
-	qglTexCoordPointer( 2, GL_FLOAT, 0, tex );
-	qglVertexPointer  ( 2, GL_FLOAT, 0, vtx );
-	qglDrawArrays( GL_TRIANGLE_FAN, 0, 4 );
-	if (!text)
-		qglDisableClientState( GL_TEXTURE_COORD_ARRAY );
-	if (glcol)
-		qglEnableClientState(GL_COLOR_ARRAY);
-#else
-	qglBegin( GL_QUADS );							
-	qglTexCoord2f(	texX,						texHeight	);	
-	qglVertex2f(	x,							y	);
+	y = glConfig.vidHeight - height;
 
-	qglTexCoord2f(	texX,						texY	);				
-	qglVertex2f(	x,							height	);	
-
-	qglTexCoord2f(	texWidth,					texY	);				
-	qglVertex2f(	width,						height	);	
-
-	qglTexCoord2f(	texWidth,					texHeight	);	
-	qglVertex2f(	width,						y	);				
-	qglEnd ();
-#endif
+	ZTM_DrawQuad( 0, y, width, height, texX, texY, texX + texWidth, texY + texHeight );
 }
 
 

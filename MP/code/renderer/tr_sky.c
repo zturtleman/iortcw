@@ -377,26 +377,18 @@ static float s_skyTexCoords[SKY_SUBDIVISIONS + 1][SKY_SUBDIVISIONS + 1][2];
 
 static void DrawSkySide( struct image_s *image, const int mins[2], const int maxs[2] ) {
 	int s, t;
-
-	GL_Bind( image );
-
 #ifdef USE_OPENGLES
 	GLfloat vtx[3*1024];	// arbitrary sized
 	GLfloat tex[2*1024];
 	int idx;
-	
-	GLboolean text = qglIsEnabled(GL_TEXTURE_COORD_ARRAY);
-	GLboolean glcol = qglIsEnabled(GL_COLOR_ARRAY);
-	if (glcol)
-		qglDisableClientState(GL_COLOR_ARRAY);
-	if (!text)
-		qglEnableClientState( GL_TEXTURE_COORD_ARRAY );
 #endif
+
+	GL_Bind( image );
 
 	for ( t = mins[1] + HALF_SKY_SUBDIVISIONS; t < maxs[1] + HALF_SKY_SUBDIVISIONS; t++ )
 	{
 #ifdef USE_OPENGLES
-		idx=0;
+		idx = 0;
 #else
 		qglBegin( GL_TRIANGLE_STRIP );
 #endif
@@ -421,39 +413,22 @@ static void DrawSkySide( struct image_s *image, const int mins[2], const int max
 
 #ifdef USE_OPENGLES
 		//*TODO* Try to switch from many DrawArrays of GL_TRIANGLE_STRIP to a single DrawArrays of TRIANGLES to see if it perform better
-		qglVertexPointer (3, GL_FLOAT, 0, vtx);
-		qglTexCoordPointer(2, GL_FLOAT, 0, tex);
-		qglDrawArrays(GL_TRIANGLE_STRIP, 0, idx);
+		R_DrawArrays( GL_TRIANGLE_STRIP, idx, vtx, 3, tex, NULL );
 #else
 		qglEnd();
 #endif
 	}
-
-#ifdef USE_OPENGLES
-	if (glcol)
-		qglEnableClientState(GL_COLOR_ARRAY);
-	if (!text)
-		qglDisableClientState( GL_TEXTURE_COORD_ARRAY );
-#endif
 }
 
 static void DrawSkySideInner( struct image_s *image, const int mins[2], const int maxs[2] ) {
 	int s, t;
-
-	GL_Bind( image );
-
 #ifdef USE_OPENGLES
 	GLfloat vtx[3*1024];	// arbitrary sized
 	GLfloat tex[2*1024];
 	int idx;
-	
-	GLboolean text = qglIsEnabled(GL_TEXTURE_COORD_ARRAY);
-	GLboolean glcol = qglIsEnabled(GL_COLOR_ARRAY);
-	if (glcol)
-		qglDisableClientState(GL_COLOR_ARRAY);
-	if (!text)
-		qglEnableClientState( GL_TEXTURE_COORD_ARRAY );
 #endif
+
+	GL_Bind( image );
 
 	//qglDisable (GL_BLEND);
 	qglBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
@@ -463,7 +438,7 @@ static void DrawSkySideInner( struct image_s *image, const int mins[2], const in
 	for ( t = mins[1] + HALF_SKY_SUBDIVISIONS; t < maxs[1] + HALF_SKY_SUBDIVISIONS; t++ )
 	{
 #ifdef USE_OPENGLES
-		idx=0;
+		idx = 0;
 #else
 		qglBegin( GL_TRIANGLE_STRIP );
 #endif
@@ -488,22 +463,13 @@ static void DrawSkySideInner( struct image_s *image, const int mins[2], const in
 
 #ifdef USE_OPENGLES
 		//*TODO* Try to switch from many DrawArrays of GL_TRIANGLE_STRIP to a single DrawArrays of TRIANGLES to see if it perform better
-		qglVertexPointer (3, GL_FLOAT, 0, vtx);
-		qglTexCoordPointer(2, GL_FLOAT, 0, tex);
-		qglDrawArrays(GL_TRIANGLE_STRIP, 0, idx);
+		R_DrawArrays( GL_TRIANGLE_STRIP, idx, vtx, 3, tex, NULL );
 #else
 		qglEnd();
 #endif
 	}
 
 	qglDisable( GL_BLEND );
-
-#ifdef USE_OPENGLES
-	if (glcol)
-		qglEnableClientState(GL_COLOR_ARRAY);
-	if (!text)
-		qglDisableClientState( GL_TEXTURE_COORD_ARRAY );
-#endif
 }
 
 static void DrawSkyBox( shader_t *shader ) {

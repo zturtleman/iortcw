@@ -295,6 +295,15 @@ overlap and double darken.
 =================
 */
 void RB_ShadowFinish( void ) {
+#ifdef USE_OPENGLES
+	GLfloat vtx[] = {
+	 -100,  100, -10,
+	  100,  100, -10,
+	  100, -100, -10,
+	 -100, -100, -10
+	};
+#endif
+
 	if ( r_shadows->integer != 2 ) {
 		return;
 	}
@@ -318,24 +327,7 @@ void RB_ShadowFinish( void ) {
 //	GL_State( GLS_DEPTHMASK_TRUE | GLS_SRCBLEND_ONE | GLS_DSTBLEND_ZERO );
 
 #ifdef USE_OPENGLES
-	GLboolean text = qglIsEnabled(GL_TEXTURE_COORD_ARRAY);
-	GLboolean glcol = qglIsEnabled(GL_COLOR_ARRAY);
-	if (text)
-		qglDisableClientState( GL_TEXTURE_COORD_ARRAY );
-	if (glcol)
-		qglDisableClientState( GL_COLOR_ARRAY );
-	GLfloat vtx[] = {
-	 -100,  100, -10,
-	  100,  100, -10,
-	  100, -100, -10,
-	 -100, -100, -10
-	};
-	qglVertexPointer  ( 3, GL_FLOAT, 0, vtx );
-	qglDrawArrays( GL_TRIANGLE_FAN, 0, 4 );
-	if (text)
-		qglEnableClientState( GL_TEXTURE_COORD_ARRAY );
-	if (glcol)
-		qglEnableClientState( GL_COLOR_ARRAY );
+	R_DrawArrays( GL_TRIANGLE_FAN, 4, vtx, 3, NULL, NULL );
 #else
 	qglBegin( GL_QUADS );
 	qglVertex3f( -100, 100, -10 );

@@ -319,6 +319,9 @@ static void RB_SurfaceBeam( void ) {
 	vec3_t direction, normalized_direction;
 	vec3_t start_points[NUM_BEAM_SEGS], end_points[NUM_BEAM_SEGS];
 	vec3_t oldorigin, origin;
+#ifdef USE_OPENGLES
+	vec3_t vtx[(NUM_BEAM_SEGS+1)*2];
+#endif
 
 	e = &backEnd.currentEntity->e;
 
@@ -356,23 +359,11 @@ static void RB_SurfaceBeam( void ) {
 	qglColor3f( 1, 0, 0 );
 
 #ifdef USE_OPENGLES
-	GLboolean text = qglIsEnabled(GL_TEXTURE_COORD_ARRAY);
-	GLboolean glcol = qglIsEnabled(GL_COLOR_ARRAY);
-	if (glcol)
-		qglDisableClientState(GL_COLOR_ARRAY);
-	if (text)
-		qglDisableClientState( GL_TEXTURE_COORD_ARRAY );
-	GLfloat vtx[NUM_BEAM_SEGS*6+6];
 	for ( i = 0; i <= NUM_BEAM_SEGS; i++ ) {
-		memcpy(vtx+i*6, start_points[ i % NUM_BEAM_SEGS], sizeof(GLfloat)*3);
-		memcpy(vtx+i*6+3, end_points[ i % NUM_BEAM_SEGS], sizeof(GLfloat)*3);
+		VectorCopy( start_points[ i % NUM_BEAM_SEGS], vtx[ i*2 + 0 ] );
+		VectorCopy( end_points[ i % NUM_BEAM_SEGS], vtx[ i*2 + 1 ] );
 	}
-	qglVertexPointer (3, GL_FLOAT, 0, vtx);
-	qglDrawArrays(GL_TRIANGLE_STRIP, 0, NUM_BEAM_SEGS*2+2);
-	if (glcol)
-		qglEnableClientState(GL_COLOR_ARRAY);
-	if (text)
-		qglEnableClientState( GL_TEXTURE_COORD_ARRAY );
+	R_DrawArrays( GL_TRIANGLE_STRIP, (NUM_BEAM_SEGS+1)*2, vtx, 3, NULL, NULL );
 #else
 	qglBegin( GL_TRIANGLE_STRIP );
 	for ( i = 0; i <= NUM_BEAM_SEGS; i++ ) {
@@ -1426,6 +1417,8 @@ Draws x/y/z lines from the origin for orientation debugging
 ===================
 */
 static void RB_SurfaceAxis( void ) {
+	R_FogOff();
+
 	GL_Bind( tr.whiteImage );
 	GL_State( GLS_DEFAULT );
 	qglLineWidth( 3 );
@@ -1447,19 +1440,7 @@ static void RB_SurfaceAxis( void ) {
 	  0,0,0,
 	  0,0,16
 	 };
-	GLboolean text = qglIsEnabled(GL_TEXTURE_COORD_ARRAY);
-	GLboolean glcol = qglIsEnabled(GL_COLOR_ARRAY);
-	if (text)
-		qglDisableClientState( GL_TEXTURE_COORD_ARRAY );
-	if (!glcol)
-		qglEnableClientState( GL_COLOR_ARRAY);
-	qglColorPointer( 4, GL_UNSIGNED_BYTE, 0, col );
-	qglVertexPointer (3, GL_FLOAT, 0, vtx);
-	qglDrawArrays(GL_LINES, 0, 6);
-	if (text)
-		qglEnableClientState( GL_TEXTURE_COORD_ARRAY );
-	if (!glcol)
-		qglDisableClientState( GL_COLOR_ARRAY);
+	R_DrawArrays( GL_LINES, 6, vtx, 3, NULL, col );
 #else
 	qglBegin( GL_LINES );
 	qglColor3f( 1,0,0 );

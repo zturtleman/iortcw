@@ -1609,12 +1609,10 @@ void R_DebugPolygon( int color, int numPoints, float *points ) {
 
 	// draw solid shade
 
-#ifdef USE_OPENGLES
-	qglColor4f( color&1, (color>>1)&1, (color>>2)&1, 1.0f );
-	qglVertexPointer  ( 3, GL_FLOAT, 0, points );
-	qglDrawArrays( GL_TRIANGLE_FAN, 0, numPoints );
-#else
 	qglColor3f( color & 1, ( color >> 1 ) & 1, ( color >> 2 ) & 1 );
+#ifdef USE_OPENGLES
+	R_DrawArrays( GL_TRIANGLE_FAN, numPoints, points, 3, NULL, NULL );
+#else
 	qglBegin( GL_POLYGON );
 	for ( i = 0 ; i < numPoints ; i++ ) {
 		qglVertex3fv( points + i * 3 );
@@ -1627,12 +1625,12 @@ void R_DebugPolygon( int color, int numPoints, float *points ) {
 	GL_State( GLS_POLYMODE_LINE | GLS_DEPTHMASK_TRUE | GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE );
 #endif
 	qglDepthRange( 0, 0 );
-#ifdef USE_OPENGLES
-	qglColor4f( 1.0f, 1.0f, 1.0f, 1.0f );
-	qglVertexPointer  ( 3, GL_FLOAT, 0, points );
-	qglDrawArrays( GL_LINES, 0, numPoints );
-#else
 	qglColor3f( 1, 1, 1 );
+#ifdef USE_OPENGLES
+	// ZTM: NOTE: check if there is a better mode for this? many lines are missing
+	// ZTM: TODO: Check GL_LINE_STRIP
+	R_DrawArrays( GL_LINES, numPoints, points, 3, NULL, NULL );
+#else
 	qglBegin( GL_POLYGON );
 	for ( i = 0 ; i < numPoints ; i++ ) {
 		qglVertex3fv( points + i * 3 );

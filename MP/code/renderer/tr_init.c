@@ -451,29 +451,44 @@ byte *RB_ReadPixels(int x, int y, int width, int height, size_t *offset, int *pa
 	GLint packAlign;
 	
 	qglGetIntegerv(GL_PACK_ALIGNMENT, &packAlign);
-	
-	linelen = width * 3;
-	padwidth = PAD(linelen, packAlign);
-	
-	// Allocate a few more bytes so that we can choose an alignment we like
-	buffer = ri.Hunk_AllocateTempMemory(padwidth * height + *offset + packAlign - 1);
 
 #ifdef USE_OPENGLES
-	bufstart=buffer;
-	padwidth=linelen;
-	int p2width=1, p2height=1;
-	int xx, yy, aa;
-	while (p2width<glConfig.vidWidth) p2width*=2;
-	while (p2height<glConfig.vidHeight) p2height*=2;
-	byte *source = (byte*) ri.Z_Malloc( p2width * p2height * 4 );
-	qglReadPixels( 0, 0, p2width, p2height, GL_RGBA, GL_UNSIGNED_BYTE, source );
-	for (yy=y; yy<height; yy++)
-		for (xx=x; xx<width; xx++)
-			for (aa=0; aa<3; aa++)
-				buffer[yy*width*3+xx*3+aa]=source[(yy+y)*p2width*4+(xx+x)*4+aa];
-	ri.Free(source);
+	// NOTE: GLES 1.1 requires power of two, GLES 2 does not
+	int p2width, p2height, yin, xin, xout;
+
+	for ( p2width = 1; p2width < width; p2width *= 2 );
+	for ( p2height = 1; p2height < height; p2height *= 2 );
+
+	linelen = p2width * 4; // read RGBA
+	padwidth = PAD(linelen, packAlign);
+
+	// Allocate a few more bytes so that we can choose an alignment we like
+	buffer = ri.Hunk_AllocateTempMemory(padwidth * p2height + *offset + packAlign - 1);
 #else
+	linelen = width * 3;
+	padwidth = PAD(linelen, packAlign);
+
+	// Allocate a few more bytes so that we can choose an alignment we like
+	buffer = ri.Hunk_AllocateTempMemory(padwidth * height + *offset + packAlign - 1);
+#endif
+
 	bufstart = PADP((intptr_t) buffer + *offset, packAlign);
+
+#ifdef USE_OPENGLES
+	qglReadPixels(x, y, p2width, p2height, GL_RGBA, GL_UNSIGNED_BYTE, bufstart);
+
+	// convert RGBA to RGB, in place, line by line
+	for ( yin = 0; yin < height; yin++ ) {
+		for ( xin = 0, xout = 0; xin < width*4; xin += 4, xout += 3 ) {
+			bufstart[ yin*padwidth + xout + 0 ] = bufstart[ yin*padwidth + xin + 0 ];
+			bufstart[ yin*padwidth + xout + 1 ] = bufstart[ yin*padwidth + xin + 1 ];
+			bufstart[ yin*padwidth + xout + 2 ] = bufstart[ yin*padwidth + xin + 2 ];
+		}
+	}
+
+	// RGBA to RGB conversion left 'width' bytes unused at end of each line
+	linelen -= width;
+#else
 	qglReadPixels(x, y, width, height, GL_RGB, GL_UNSIGNED_BYTE, bufstart);
 #endif
 	
