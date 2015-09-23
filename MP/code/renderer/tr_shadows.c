@@ -296,11 +296,11 @@ overlap and double darken.
 */
 void RB_ShadowFinish( void ) {
 #ifdef USE_OPENGLES
-	GLfloat vtx[] = {
-	 -100,  100, -10,
-	  100,  100, -10,
-	  100, -100, -10,
-	 -100, -100, -10
+	vec3_t vtx[4] = {
+	 { -100,  100, -10 },
+	 {  100,  100, -10 },
+	 {  100, -100, -10 },
+	 { -100, -100, -10 }
 	};
 #endif
 
@@ -327,7 +327,7 @@ void RB_ShadowFinish( void ) {
 //	GL_State( GLS_DEPTHMASK_TRUE | GLS_SRCBLEND_ONE | GLS_DSTBLEND_ZERO );
 
 #ifdef USE_OPENGLES
-	R_DrawArrays( GL_TRIANGLE_FAN, 4, vtx, 3, NULL, NULL );
+	GL_DrawArrays( GL_TRIANGLE_FAN, 4, vtx, 3, NULL, NULL );
 #else
 	qglBegin( GL_QUADS );
 	qglVertex3f( -100, 100, -10 );

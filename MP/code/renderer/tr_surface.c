@@ -360,10 +360,10 @@ static void RB_SurfaceBeam( void ) {
 
 #ifdef USE_OPENGLES
 	for ( i = 0; i <= NUM_BEAM_SEGS; i++ ) {
-		VectorCopy( start_points[ i % NUM_BEAM_SEGS], vtx[ i*2 + 0 ] );
-		VectorCopy( end_points[ i % NUM_BEAM_SEGS], vtx[ i*2 + 1 ] );
+		VectorCopy( start_points[i % NUM_BEAM_SEGS], vtx[i*2] );
+		VectorCopy( end_points[i % NUM_BEAM_SEGS], vtx[i*2 + 1] );
 	}
-	R_DrawArrays( GL_TRIANGLE_STRIP, (NUM_BEAM_SEGS+1)*2, vtx, 3, NULL, NULL );
+	GL_DrawArrays( GL_TRIANGLE_STRIP, (NUM_BEAM_SEGS+1)*2, vtx, 3, NULL, NULL );
 #else
 	qglBegin( GL_TRIANGLE_STRIP );
 	for ( i = 0; i <= NUM_BEAM_SEGS; i++ ) {
@@ -1417,6 +1417,25 @@ Draws x/y/z lines from the origin for orientation debugging
 ===================
 */
 static void RB_SurfaceAxis( void ) {
+#ifdef USE_OPENGLES
+	vec4_t col[8] = {
+	  { 1, 0, 0, 1 }
+	  { 1, 0, 0, 1 }
+	  { 0, 1, 0, 1 }
+	  { 0, 1, 0, 1 }
+	  { 0, 0, 1, 1 }
+	  { 0, 0, 1, 1 }
+	};
+	vec3_t vtx[8] = {
+	  { 0,  0, 0 },
+	  { 16, 0, 0 },
+	  { 0,  0, 0 },
+	  { 0, 16, 0 },
+	  { 0,  0, 0 },
+	  { 0,  0, 16 }
+	 };
+#endif
+
 	R_FogOff();
 
 	GL_Bind( tr.whiteImage );
@@ -1424,23 +1443,7 @@ static void RB_SurfaceAxis( void ) {
 	qglLineWidth( 3 );
 
 #ifdef USE_OPENGLES
-	GLfloat col[] = {
-	  1,0,0, 1,
-	  1,0,0, 1,
-	  0,1,0, 1,
-	  0,1,0, 1,
-	  0,0,1, 1,
-	  0,0,1, 1
-	 };
-	 GLfloat vtx[] = {
-	  0,0,0,
-	  16,0,0,
-	  0,0,0,
-	  0,16,0,
-	  0,0,0,
-	  0,0,16
-	 };
-	R_DrawArrays( GL_LINES, 6, vtx, 3, NULL, col );
+	GL_DrawArrays( GL_LINES, 6, vtx, 3, NULL, col );
 #else
 	qglBegin( GL_LINES );
 	qglColor3f( 1,0,0 );

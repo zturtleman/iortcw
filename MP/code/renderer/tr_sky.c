@@ -378,8 +378,8 @@ static float s_skyTexCoords[SKY_SUBDIVISIONS + 1][SKY_SUBDIVISIONS + 1][2];
 static void DrawSkySide( struct image_s *image, const int mins[2], const int maxs[2] ) {
 	int s, t;
 #ifdef USE_OPENGLES
-	GLfloat vtx[3*1024];	// arbitrary sized
-	GLfloat tex[2*1024];
+	vec3_t vtx[1024];	// arbitrary sized
+	vec2_t tex[1024];
 	int idx;
 #endif
 
@@ -396,6 +396,7 @@ static void DrawSkySide( struct image_s *image, const int mins[2], const int max
 		for ( s = mins[0] + HALF_SKY_SUBDIVISIONS; s <= maxs[0] + HALF_SKY_SUBDIVISIONS; s++ )
 		{
 #ifdef USE_OPENGLES
+			// ZTM: TODO: use VectorCopy and Vector2Copy
 			memcpy(tex+idx*2, s_skyTexCoords[t][s], sizeof(GLfloat)*2);
 			memcpy(vtx+idx*3, s_skyPoints[t][s], sizeof(GLfloat)*3);
 			idx++;
@@ -413,7 +414,7 @@ static void DrawSkySide( struct image_s *image, const int mins[2], const int max
 
 #ifdef USE_OPENGLES
 		//*TODO* Try to switch from many DrawArrays of GL_TRIANGLE_STRIP to a single DrawArrays of TRIANGLES to see if it perform better
-		R_DrawArrays( GL_TRIANGLE_STRIP, idx, vtx, 3, tex, NULL );
+		GL_DrawArrays( GL_TRIANGLE_STRIP, idx, vtx, 3, tex, NULL );
 #else
 		qglEnd();
 #endif
@@ -446,6 +447,7 @@ static void DrawSkySideInner( struct image_s *image, const int mins[2], const in
 		for ( s = mins[0] + HALF_SKY_SUBDIVISIONS; s <= maxs[0] + HALF_SKY_SUBDIVISIONS; s++ )
 		{
 #ifdef USE_OPENGLES
+			// ZTM: TODO: use VectorCopy and Vector2Copy
 			memcpy(tex+idx*2, s_skyTexCoords[t][s], sizeof(GLfloat)*2);
 			memcpy(vtx+idx*3, s_skyPoints[t][s], sizeof(GLfloat)*3);
 			idx++;
@@ -463,7 +465,7 @@ static void DrawSkySideInner( struct image_s *image, const int mins[2], const in
 
 #ifdef USE_OPENGLES
 		//*TODO* Try to switch from many DrawArrays of GL_TRIANGLE_STRIP to a single DrawArrays of TRIANGLES to see if it perform better
-		R_DrawArrays( GL_TRIANGLE_STRIP, idx, vtx, 3, tex, NULL );
+		GL_DrawArrays( GL_TRIANGLE_STRIP, idx, vtx, 3, tex, NULL );
 #else
 		qglEnd();
 #endif

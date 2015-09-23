@@ -356,6 +356,92 @@ void GL_State( unsigned long stateBits ) {
 	glState.glStateBits = stateBits;
 }
 
+/*
+=================
+GL_DrawQuad
+
+Draw a 2D textured quad
+=================
+*/
+void GL_DrawQuad( float x, float y, float width, float height, float s0, float t0, float s1, float t1 ) {
+	vec2_t tex[4] = {
+	 { s0, t0 },
+	 { s1, t0 },
+	 { s1, t1 },
+	 { s0, t1 }
+	};
+	vec2_t vtx[4] = {
+	 { x, y },
+	 { x + width, y },
+	 { x + width, y + height },
+	 { x, y + height }
+	};
+
+#ifdef USE_OPENGLES
+	GL_DrawArrays( GL_TRIANGLE_FAN, 4, vtx, 2, tex, NULL );
+#else
+	int i;
+
+	qglBegin( GL_QUADS );
+	for ( i = 0; i < 4; i++ ) {
+		qglTexCoord2f( tex[i*2+0],  tex[i*2+1] );
+		qglVertex2f( vtx[i*2+0],  vtx[i*2+1] );
+	}
+	qglEnd();
+#endif
+}
+
+#ifdef USE_OPENGLES
+/*
+=================
+GL_DrawArrays
+
+Draw vertex, texture, and/or color arrays
+
+vertCoords must be 2 (XY) or 3 (XYZ)
+vertexes must be vec2_t or vec3_t
+=================
+*/
+void GL_DrawArrays( GLenum mode, GLsizei count, void *vertexes, int vertCoords, vec2_t *texCoords, vec4_t *colors ) {
+	GLboolean texEnabled = qglIsEnabled(GL_TEXTURE_COORD_ARRAY);
+	GLboolean colorEnabled = qglIsEnabled(GL_COLOR_ARRAY);
+
+	if ( colorEnabled && !colors ) {
+		qglDisableClientState( GL_COLOR_ARRAY );
+	} else if ( !colorEnabled && colors ) {
+		qglEnableClientState( GL_COLOR_ARRAY );
+	}
+
+	if ( texEnabled && !texCoords ) {
+		qglDisableClientState( GL_TEXTURE_COORD_ARRAY );
+	} else if ( !texEnabled && texCoords ) {
+		qglEnableClientState( GL_TEXTURE_COORD_ARRAY );
+	}
+
+	if ( colors ) {
+		qglColorPointer( 4, GL_FLOAT, 0, (GLfloat*)colors );
+	}
+
+	if ( texCoords ) {
+		qglTexCoordPointer( 2, GL_FLOAT, 0, (GLfloat*)texCoords );
+	}
+
+	qglVertexPointer( vertCoords, GL_FLOAT, 0, (GLfloat*)vertexes );
+	qglDrawArrays( mode, 0, count );
+
+	if ( colorEnabled && !colors ) {
+		qglEnableClientState( GL_COLOR_ARRAY );
+	} else if ( !colorEnabled && colors ) {
+		qglDisableClientState( GL_COLOR_ARRAY );
+	}
+
+	if ( texEnabled && !texCoords ) {
+		qglEnableClientState( GL_TEXTURE_COORD_ARRAY );
+	} else if ( !texEnabled && texCoords ) {
+		qglDisableClientState( GL_TEXTURE_COORD_ARRAY );
+	}
+}
+#endif
 
 
 /*
@@ -392,78 +478,6 @@ static void SetViewportAndScissor( void ) {
 				backEnd.viewParms.viewportWidth, backEnd.viewParms.viewportHeight );
 }
 
-#ifdef USE_OPENGLES
-// vertCoords should be 2 (XY) or 3 (XYZ)
-void R_DrawArrays( GLenum mode, GLsizei count, GLfloat *vertexes, int vertCoords, GLfloat *texCoords, GLfloat *colors ) {
-	GLboolean texEnabled = qglIsEnabled(GL_TEXTURE_COORD_ARRAY);
-	GLboolean colorEnabled = qglIsEnabled(GL_COLOR_ARRAY);
-
-	if ( colorEnabled && !colors ) {
-		qglDisableClientState( GL_COLOR_ARRAY );
-	} else if ( !colorEnabled && colors ) {
-		qglEnableClientState( GL_COLOR_ARRAY );
-	}
-
-	if ( texEnabled && !texCoords ) {
-		qglDisableClientState( GL_TEXTURE_COORD_ARRAY );
-	} else if ( !texEnabled && texCoords ) {
-		qglEnableClientState( GL_TEXTURE_COORD_ARRAY );
-	}
-
-	if ( colors ) {
-		qglColorPointer( 4, GL_FLOAT, 0, colors );
-	}
-
-	if ( texCoords ) {
-		qglTexCoordPointer( 2, GL_FLOAT, 0, texCoords );
-	}
-
-	qglVertexPointer( vertCoords, GL_FLOAT, 0, vertexes );
-	qglDrawArrays( mode, 0, count );
-
-	if ( colorEnabled && !colors ) {
-		qglEnableClientState( GL_COLOR_ARRAY );
-	} else if ( !colorEnabled && colors ) {
-		qglDisableClientState( GL_COLOR_ARRAY );
-	}
-
-	if ( texEnabled && !texCoords ) {
-		qglEnableClientState( GL_TEXTURE_COORD_ARRAY );
-	} else if ( !texEnabled && texCoords ) {
-		qglDisableClientState( GL_TEXTURE_COORD_ARRAY );
-	}
-}
-#endif
-
-// ZTM: FIXME: Where should this be and what should it be named? RB_DrawQuad? R_DrawQuad? Something else?
-// 2D textured quad
-void ZTM_DrawQuad( float x, float y, float width, float height, float s0, float t0, float s1, float t1 ) {
-	GLfloat tex[8] = {
-	 s0, t0,
-	 s1, t0,
-	 s1, t1,
-	 s0, t1
-	};
-	GLfloat vtx[8] = {
-	 x, y,
-	 x + width, y,
-	 x + width, y + height,
-	 x, y + height
-	};
-
-#ifdef USE_OPENGLES
-	R_DrawArrays( GL_TRIANGLE_FAN, 4, vtx, 2, tex, NULL );
-#else
-	int i;
-
-	qglBegin( GL_QUADS );
-	for ( i = 0; i < 4; i++ ) {
-		qglTexCoord2f( tex[i*2+0],  tex[i*2+1] );
-		qglVertex2f( vtx[i*2+0],  vtx[i*2+1] );
-	}
-	qglEnd();
-#endif
-}
 
 /*
 =================
@@ -926,7 +940,7 @@ void RE_StretchRaw( int x, int y, int w, int h, int cols, int rows, const byte *
 
 	qglColor3f( tr.identityLight, tr.identityLight, tr.identityLight );
 
-	ZTM_DrawQuad( x, y, w, h, 0.5f / cols,  0.5f / rows, ( cols - 0.5f ) / cols, ( rows - 0.5f ) / rows );
+	GL_DrawQuad( x, y, w, h, 0.5f / cols,  0.5f / rows, ( cols - 0.5f ) / cols, ( rows - 0.5f ) / rows );
 }
 
 
@@ -1312,7 +1326,7 @@ void RB_ShowImages( void ) {
 		}
 
 		GL_Bind( image );
-		ZTM_DrawQuad( x, y, w, h, 0, 0, 1, 1 );
+		GL_DrawQuad( x, y, w, h, 0, 0, 1, 1 );
 	}
 
 	qglFinish();

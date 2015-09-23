@@ -977,8 +977,9 @@ void GL_SetDefaultState( void ) {
 	glState.glStateBits = GLS_DEPTHTEST_DISABLE | GLS_DEPTHMASK_TRUE;
 
 #ifdef USE_OPENGLES
-	glPixelStorei(GL_PACK_ALIGNMENT, 1);
-	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+	// ZTM: FIXME: Why is this needed / exist here ?
+	glPixelStorei( GL_PACK_ALIGNMENT, 1 );
+	glPixelStorei( GL_UNPACK_ALIGNMENT, 1 );
 #else
 	qglPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
 #endif

@@ -316,7 +316,7 @@ static void DrawNormals( shaderCommands_t *input ) {
 	int i;
 	vec3_t temp;
 #ifdef USE_OPENGLES
-	GLfloat vtx[SHADER_MAX_VERTEXES*2*3];
+	vec3_t vtx[SHADER_MAX_VERTEXES*2];
 	int idx = 0;
 #endif
 
@@ -327,14 +327,14 @@ static void DrawNormals( shaderCommands_t *input ) {
 
 #ifdef USE_OPENGLES
 	for ( i = 0 ; i < input->numVertexes ; i++ ) {
-		VectorCopy( input->xyz[i], (vtx+idx*3) );
+		VectorCopy( input->xyz[i], vtx[idx] );
 		idx++;
 		VectorMA( input->xyz[i], 2, input->normal[i], temp );
-		VectorCopy( temp, (vtx+idx*3) );
+		VectorCopy( temp, vtx[idx] );
 		idx++;
 	}
 
-	R_DrawArrays( GL_LINES, idx, vtx, 3, NULL, NULL );
+	GL_DrawArrays( GL_LINES, idx, vtx, 3, NULL, NULL );
 #else
 	qglBegin( GL_LINES );
 	for ( i = 0 ; i < input->numVertexes ; i++ ) {

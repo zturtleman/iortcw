@@ -1312,6 +1312,10 @@ void    GL_CheckErrors( void );
 void    GL_State( unsigned long stateVector );
 void    GL_TexEnv( int env );
 void    GL_Cull( int cullType );
+void    GL_DrawQuad( float x, float y, float width, float height, float s0, float t0, float s1, float t1 );
+#ifdef USE_OPENGLES
+void GL_DrawArrays( GLenum mode, GLsizei count, void *vertexes, int vertCoords, vec2_t *texCoords, vec4_t *colors );
+#endif
 
 #define GLS_SRCBLEND_ZERO                       0x00000001
 #define GLS_SRCBLEND_ONE                        0x00000002
@@ -1350,11 +1354,6 @@ void    GL_Cull( int cullType );
 
 void    RE_StretchRaw( int x, int y, int w, int h, int cols, int rows, const byte *data, int client, qboolean dirty );
 void    RE_UploadCinematic( int w, int h, int cols, int rows, const byte *data, int client, qboolean dirty );
-
-#ifdef USE_OPENGLES
-void R_DrawArrays( GLenum mode, GLsizei count, GLfloat *vertexes, int vertCoords, GLfloat *tex, GLfloat *colors );
-#endif
-void ZTM_DrawQuad( float x, float y, float width, float height, float s0, float t0, float s1, float t1 );
 
 void        RE_BeginFrame( stereoFrame_t stereoFrame );
 void        RE_BeginRegistration( glconfig_t *glconfig );

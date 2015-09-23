@@ -93,7 +93,7 @@ static void ID_INLINE R_Bloom_Quad( int width, int height, float texX, float tex
 
 	y = glConfig.vidHeight - height;
 
-	ZTM_DrawQuad( 0, y, width, height, texX, texY, texX + texWidth, texY + texHeight );
+	GL_DrawQuad( 0, y, width, height, texX, texY, texX + texWidth, texY + texHeight );
 }
 
 

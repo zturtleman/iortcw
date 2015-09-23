@@ -954,69 +954,69 @@ static void Upload32(   unsigned *data,
 	// copy or resample data as appropriate for first MIP level
 #ifdef USE_OPENGLES
 	if ( ( scaled_width == width ) && 
-			( scaled_height == height ) ) {
-			Com_Memcpy (scaledBuffer, data, width*height*4);
-		}
-		else
-		{
-			// use the normal mip-mapping function to go down from here
-			while ( width > scaled_width || height > scaled_height ) {
-				R_MipMap( (byte *)data, width, height );
-				width >>= 1;
-				height >>= 1;
-				if ( width < 1 ) {
-					width = 1;
-				}
-				if ( height < 1 ) {
-					height = 1;
-				}
+		( scaled_height == height ) ) {
+		Com_Memcpy (scaledBuffer, data, width*height*4);
+	}
+	else
+	{
+		// use the normal mip-mapping function to go down from here
+		while ( width > scaled_width || height > scaled_height ) {
+			R_MipMap( (byte *)data, width, height );
+			width >>= 1;
+			height >>= 1;
+			if ( width < 1 ) {
+				width = 1;
 			}
-			Com_Memcpy( scaledBuffer, data, width * height * 4 );
+			if ( height < 1 ) {
+				height = 1;
+			}
 		}
-		R_LightScaleTexture (scaledBuffer, scaled_width, scaled_height, !mipmap );
+		Com_Memcpy( scaledBuffer, data, width * height * 4 );
+	}
+	R_LightScaleTexture (scaledBuffer, scaled_width, scaled_height, !mipmap );
 
-		glTexParameteri( GL_TEXTURE_2D, GL_GENERATE_MIPMAP, (mipmap)?GL_TRUE:GL_FALSE );
+	glTexParameteri( GL_TEXTURE_2D, GL_GENERATE_MIPMAP, (mipmap)?GL_TRUE:GL_FALSE );
 
-		// and now, convert if needed and upload
-		// GLES doesn't do convertion itself, so we have to handle that
-		byte *temp;
-		switch ( internalFormat ) {
-		 case GL_RGB5:
-			temp = gles_convertRGB5((byte*)scaledBuffer, scaled_width, scaled_height);
-			qglTexImage2D (GL_TEXTURE_2D, 0, GL_RGB, scaled_width, scaled_height, 0, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, temp);
-			ri.Free(temp);
-			break;
-		 case GL_RGBA4:
-			temp = gles_convertRGBA4((byte*)scaledBuffer, width, height);
-			qglTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, scaled_width, scaled_height, 0, GL_RGBA, GL_UNSIGNED_SHORT_4_4_4_4, temp);
-			ri.Free(temp);
-			break;
-		 case GL_RGB:
-			temp = gles_convertRGB((byte*)scaledBuffer, width, height);
-			qglTexImage2D (GL_TEXTURE_2D, 0, GL_RGB, scaled_width, scaled_height, 0, GL_RGB, GL_UNSIGNED_BYTE, temp);
-			ri.Free(temp);
-			break;
-		 case GL_LUMINANCE:
-			temp = gles_convertLuminance((byte*)scaledBuffer, width, height);
-			qglTexImage2D (GL_TEXTURE_2D, 0, GL_LUMINANCE, scaled_width, scaled_height, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, temp);
-			ri.Free(temp);
-			break;
-		 case GL_LUMINANCE_ALPHA:
-			temp = gles_convertLuminanceAlpha((byte*)scaledBuffer, width, height);
-			qglTexImage2D (GL_TEXTURE_2D, 0, GL_LUMINANCE_ALPHA, scaled_width, scaled_height, 0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, temp);
-			ri.Free(temp);
-			break;
-		 default:
-			internalFormat = GL_RGBA;
-			qglTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, scaled_width, scaled_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, scaledBuffer);
-		}
+	// and now, convert if needed and upload
+	// GLES doesn't do convertion itself, so we have to handle that
+	byte *temp;
+	switch ( internalFormat ) {
+	 case GL_RGB5:
+		temp = gles_convertRGB5((byte*)scaledBuffer, scaled_width, scaled_height);
+		qglTexImage2D (GL_TEXTURE_2D, 0, GL_RGB, scaled_width, scaled_height, 0, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, temp);
+		ri.Free(temp);
+		break;
+	 case GL_RGBA4:
+		temp = gles_convertRGBA4((byte*)scaledBuffer, width, height);
+		qglTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, scaled_width, scaled_height, 0, GL_RGBA, GL_UNSIGNED_SHORT_4_4_4_4, temp);
+		ri.Free(temp);
+		break;
+	 case GL_RGB:
+		temp = gles_convertRGB((byte*)scaledBuffer, width, height);
+		qglTexImage2D (GL_TEXTURE_2D, 0, GL_RGB, scaled_width, scaled_height, 0, GL_RGB, GL_UNSIGNED_BYTE, temp);
+		ri.Free(temp);
+		break;
+	 case GL_LUMINANCE:
+		temp = gles_convertLuminance((byte*)scaledBuffer, width, height);
+		qglTexImage2D (GL_TEXTURE_2D, 0, GL_LUMINANCE, scaled_width, scaled_height, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, temp);
+		ri.Free(temp);
+		break;
+	 case GL_LUMINANCE_ALPHA:
+		temp = gles_convertLuminanceAlpha((byte*)scaledBuffer, width, height);
+		qglTexImage2D (GL_TEXTURE_2D, 0, GL_LUMINANCE_ALPHA, scaled_width, scaled_height, 0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, temp);
+		ri.Free(temp);
+		break;
+	 default:
+		internalFormat = GL_RGBA;
+		qglTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, scaled_width, scaled_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, scaledBuffer);
+	}
 
 	*pUploadWidth = scaled_width;
 	*pUploadHeight = scaled_height;
 	*format = internalFormat;
-		
-	//	qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
-	//	qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+
+	//qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+	//qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
 #else
 	if ( ( scaled_width == width ) &&
 		 ( scaled_height == height ) ) {
